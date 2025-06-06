@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Juego de Preguntas Moderno</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+</head>
+<body class="bg-light">
+  <header class="container py-4">
+    <h1 class="text-center">Juego de Preguntas</h1>
+  </header>
+  <main class="container" id="root"></main>
+  <footer class="container py-3 text-center small text-muted">
+    Hecho con React, TypeScript y Bootstrap.
+  </footer>
+
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="text/babel" data-presets="react,typescript">
+    interface Pregunta {
+      texto: string;
+      opciones: string[];
+      correcta: number;
+    }
+
+    const preguntas: Pregunta[] = [
+      {
+        texto: "¿Cuál es la capital de Francia?",
+        opciones: ["Berlín", "Londres", "París", "Roma"],
+        correcta: 2,
+      },
+      {
+        texto: "¿Quién escribió 'Don Quijote de la Mancha'?",
+        opciones: ["Miguel de Cervantes", "Gabriel García Márquez", "Pablo Neruda", "Isabel Allende"],
+        correcta: 0,
+      },
+      {
+        texto: "¿En qué año llegó el hombre a la Luna?",
+        opciones: ["1960", "1969", "1975", "1982"],
+        correcta: 1,
+      },
+    ];
+
+    function Opcion({ indice, texto, onSelect, disabled }:{indice:number; texto:string; onSelect:(i:number)=>void; disabled:boolean}) {
+      return (
+        <button
+          className="list-group-item list-group-item-action"
+          onClick={() => onSelect(indice)}
+          disabled={disabled}
+        >
+          {texto}
+        </button>
+      );
+    }
+
+    function PreguntaActual({ pregunta, onRespuesta, bloqueada }:{pregunta:Pregunta; onRespuesta:(i:number)=>void; bloqueada:boolean}) {
+      return (
+        <div>
+          <h2>{pregunta.texto}</h2>
+          <div className="list-group">
+            {pregunta.opciones.map((op, i) => (
+              <Opcion key={i} indice={i} texto={op} onSelect={onRespuesta} disabled={bloqueada} />
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    function App() {
+      const [indice, setIndice] = React.useState(0);
+      const [puntos, setPuntos] = React.useState(0);
+      const [bloqueada, setBloqueada] = React.useState(false);
+      const [mensaje, setMensaje] = React.useState<string>('');
+
+      const preguntaActual = preguntas[indice];
+
+      const evaluarRespuesta = (i: number) => {
+        setBloqueada(true);
+        if (i === preguntaActual.correcta) {
+          setPuntos(p => p + 1);
+          setMensaje('¡Correcto!');
+        } else {
+          setMensaje('Incorrecto. La respuesta correcta era: ' + preguntaActual.opciones[preguntaActual.correcta]);
+        }
+      };
+
+      const siguiente = () => {
+        setBloqueada(false);
+        setMensaje('');
+        setIndice(i => i + 1);
+      };
+
+      if (indice >= preguntas.length) {
+        return (
+          <section className="text-center">
+            <h2>Fin del juego</h2>
+            <p>Puntaje: {puntos} / {preguntas.length}</p>
+          </section>
+        );
+      }
+
+      const progreso = ((indice) / preguntas.length) * 100;
+
+      return (
+        <section>
+          <div className="progress mb-3">
+            <div className="progress-bar" style={{width: `${progreso}%`}}></div>
+          </div>
+
+          <PreguntaActual pregunta={preguntaActual} onRespuesta={evaluarRespuesta} bloqueada={bloqueada} />
+
+          {bloqueada && (
+            <div className="mt-3">
+              <p className="fw-bold">{mensaje}</p>
+              <button className="btn btn-primary" onClick={siguiente}>
+                {indice < preguntas.length - 1 ? 'Siguiente Pregunta' : 'Ver resultado'}
+                <i className="bi bi-arrow-right ms-2"></i>
+              </button>
+            </div>
+          )}
+        </section>
+      );
+    }
+
+    const rootElement = document.getElementById('root');
+    if (rootElement) {
+      ReactDOM.createRoot(rootElement).render(<App />);
+    }
+  </script>
+</body>
+</html>
